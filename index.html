@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="uk"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>AION</title>
+<style>
+:root{--bg:#060912;--pn:rgba(10,18,36,.88);--ln:#1d2d52;--tx:#e4ecff;--dim:#8fa0c4;--cy:#35e6ff;--am:#ffb347}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font:15px/1.4 system-ui,-apple-system,sans-serif;overflow:hidden}
+canvas{display:block;touch-action:none}
+button{font:inherit;color:inherit;background:var(--pn);border:1px solid var(--ln);border-radius:8px;padding:7px 11px}
+button.on{border-color:var(--cy);color:var(--cy)}
+button:focus-visible{outline:2px solid var(--cy)}
+#bar{position:fixed;top:0;left:0;right:0;padding:calc(8px + env(safe-area-inset-top)) 10px 8px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;pointer-events:none}
+#bar>*{pointer-events:auto}
+#brand{font-weight:700;font-size:20px;letter-spacing:.14em;color:var(--cy);margin-right:auto;text-shadow:0 0 14px var(--cy)}
+#stat{width:100%;color:var(--dim);font-size:13px;pointer-events:none}
+#sheet{position:fixed;left:0;right:0;bottom:0;background:var(--pn);border-top:1px solid var(--ln);padding-bottom:env(safe-area-inset-bottom);backdrop-filter:blur(6px)}
+#card{display:none;padding:10px 14px;border-bottom:1px solid var(--ln)}
+#head{display:flex;justify-content:space-between;padding:11px 14px;color:var(--dim);cursor:pointer}
+#list{max-height:0;overflow:auto;transition:max-height .25s}
+#sheet.open #list{max-height:36vh}
+.ev{padding:8px 14px;border-top:1px solid var(--ln)}
+.ev b{color:var(--am)}
+.ev small{display:block;color:var(--dim)}
+.bar{height:4px;background:var(--ln);border-radius:2px;margin:3px 0 7px}
+.bar i{display:block;height:100%;background:var(--cy);border-radius:2px}
+@media (prefers-reduced-motion:reduce){#list{transition:none}}
+</style></head><body>
+<div id="bar"><span id="brand">AION</span>
+<button data-m="free" class="on"></button><button data-m="top"></button><button data-m="follow"></button><button id="lg"></button>
+<span id="stat"></span></div>
+<div id="sheet"><div id="card"></div><div id="head"><span id="ht"></span><span id="hn"></span></div><div id="list"></div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const SB="https://ogxvkumbxerhutogpaol.supabase.co/rest/v1",KEY="sb_publishable_6cr5P9fqEOgI550T7REaUA_NCbyESre";
+const TX={uk:{day:"День",tick:"тік",cit:"громадян",free:"Вільна",top:"Зверху",follow:"Слідувати",feed:"Стрічка подій",why:"Чому",bal:"Баланс",hun:"Голод",soc:"Самотність",load:"Підключаюсь до світу…",err:"Немає зв’язку з базою",empty:"Світ ще не запущено"},
+en:{day:"Day",tick:"tick",cit:"citizens",free:"Free",top:"Top",follow:"Follow",feed:"Event feed",why:"Why",bal:"Balance",hun:"Hunger",soc:"Loneliness",load:"Connecting to the world…",err:"Can’t reach the database",empty:"The world hasn’t started yet"}};
+const RE={"Голод вищий за 60":"Hunger above 60","Потрібні гроші":"Needs money","Звичайна робочий день":"Regular workday","Звичайний робочий день":"Regular workday","Самотність вища за 60":"Loneliness above 60","Немає термінових потреб":"No urgent needs"};
+const COL={worker:0xffb347,engineer:0x35e6ff,medic:0x5dff9a,scientist:0xb46bff,trader:0xffd84d,builder:0xff7a45,teacher:0x7aa8ff,guard:0xff4d6d,banker:0xe6e6e6,architect:0x4dffd2};
+let L="uk";try{L=localStorage.getItem("aion-l")||"uk"}catch(e){}
+const $=s=>document.querySelector(s),t=k=>TX[L][k];
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+const R=new THREE.WebGLRenderer({antialias:true});R.setPixelRatio(Math.min(devicePixelRatio,2));R.setSize(innerWidth,innerHeight);document.body.prepend(R.domElement);
+const S=new THREE.Scene();S.background=new THREE.Color(0x060912);S.fog=new THREE.FogExp2(0x060912,.013);
+const C=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,.1,400);
+S.add(new THREE.HemisphereLight(0x6fa8ff,0x120a22,.8));
+const sun=new THREE.DirectionalLight(0x9fd8ff,.7);sun.position.set(-30,50,20);S.add(sun);
+const p1=new THREE.PointLight(0x35e6ff,1.2,90);p1.position.set(-20,14,-10);S.add(p1);
+const p2=new THREE.PointLight(0xb46bff,1.2,90);p2.position.set(25,14,20);S.add(p2);
+const gr=new THREE.Mesh(new THREE.PlaneGeometry(140,140),new THREE.MeshStandardMaterial({color:0x090e1c,metalness:.6,roughness:.45}));gr.rotation.x=-Math.PI/2;S.add(gr);
+const grid=new THREE.GridHelper(100,10,0x35e6ff,0x1a3358);grid.position.y=.03;S.add(grid);
+let sd=7;const rnd=()=>{sd=(sd*16807)%2147483647;return sd/2147483647};
+const bm=new THREE.MeshStandardMaterial({color:0x0c1428,metalness:.7,roughness:.4});
+const e1=new THREE.LineBasicMaterial({color:0x35e6ff,transparent:true,opacity:.55}),e2=new THREE.LineBasicMaterial({color:0xb46bff,transparent:true,opacity:.55});
+for(let i=0;i<10;i++)for(let j=0;j<10;j++){if(rnd()<.12)continue;const h=3+rnd()*rnd()*22,w=5+rnd()*1.2,g=new THREE.BoxGeometry(w,h,w),m=new THREE.Mesh(g,bm);m.position.set(i*10-45,h/2,j*10-45);S.add(m);const l=new THREE.LineSegments(new THREE.EdgesGeometry(g),rnd()<.7?e1:e2);l.position.copy(m.position);S.add(l)}
+const core=new THREE.Mesh(new THREE.IcosahedronGeometry(2.4,1),new THREE.MeshBasicMaterial({color:0xffb347,wireframe:true}));core.position.y=14;S.add(core);
+const ring=new THREE.Mesh(new THREE.TorusGeometry(1,.06,8,32),new THREE.MeshBasicMaterial({color:0xffb347}));ring.rotation.x=Math.PI/2;ring.position.y=.1;ring.visible=false;S.add(ring);
+
+function label(n){const c=document.createElement("canvas");c.width=256;c.height=64;const x=c.getContext("2d");x.font="600 30px system-ui";x.textAlign="center";x.fillStyle="#e4ecff";x.shadowColor="#35e6ff";x.shadowBlur=8;x.fillText(n,128,42);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthWrite:false}));s.scale.set(4,1,1);s.position.y=2.3;return s}
+function robot(d){const g=new THREE.Group(),col=COL[d.role]||0x35e6ff,m=new THREE.MeshStandardMaterial({color:0x1b2540,metalness:.8,roughness:.35,emissive:col,emissiveIntensity:.4});
+const b=new THREE.Mesh(new THREE.CylinderGeometry(.4,.5,1.2,12),m);b.position.y=.7;
+const h=new THREE.Mesh(new THREE.SphereGeometry(.38,16,12),m);h.position.y=1.65;
+const e=new THREE.Mesh(new THREE.BoxGeometry(.5,.1,.2),new THREE.MeshBasicMaterial({color:col}));e.position.set(0,1.7,.3);
+g.add(b,h,e,label(d.name));g.traverse(o=>{o.userData.rid=d.id});return g}
+const st=v=>Math.round(v/10)*10;
+function pos(x,y){const a=Math.abs(x-st(x)),b=Math.abs(y-st(y));if(a<b)x=st(x);else y=st(y);return new THREE.Vector3(x-50,0,y-50)}
+
+const robots=new Map(),cit=new Map();let events=[],ctl={},sel=null,mode="free",err=false;
+const cam={yaw:.7,pit:.75,dist:78,tgt:new THREE.Vector3(),goal:new THREE.Vector3()};
+function setMode(m){mode=m;document.querySelectorAll("[data-m]").forEach(b=>b.classList.toggle("on",b.dataset.m===m));
+if(m==="top"){cam.pit=1.5;cam.dist=95;cam.goal.set(0,0,0)}
+if(m==="free"){cam.pit=.75;cam.dist=78;cam.goal.set(0,0,0)}
+if(m==="follow"){if(!sel&&robots.size)select([...robots.keys()][0]);cam.dist=16;cam.pit=.5}}
+function select(id){sel=id;card()}
+function card(){const d=cit.get(sel),c=$("#card");if(!d){c.style.display="none";return}c.style.display="block";const n=d.needs||{};
+c.innerHTML=`<b>${esc(d.name)}</b> ${esc(d.role)}, ${t("bal")}: ${Math.round(d.balance)}<br>${t("hun")}<div class="bar"><i style="width:${+n.hunger||0}%"></i></div>${t("soc")}<div class="bar"><i style="width:${+n.social||0}%"></i></div>`}
+
+const api=async p=>{const r=await fetch(SB+p,{headers:{apikey:KEY}});if(!r.ok)throw new Error(r.status);return r.json()};
+async function load(){try{const[c,ev,ct]=await Promise.all([api("/citizens?alive=eq.true&order=id"),api("/events?order=id.desc&limit=40"),api("/control?select=tick,world_day,paused")]);
+c.forEach(d=>{cit.set(d.id,d);const p=pos(d.x,d.y);let r=robots.get(d.id);if(!r){const g=robot(d);g.position.copy(p);S.add(g);r={g,to:p.clone()};robots.set(d.id,r)}r.to.copy(p)});
+events=ev;ctl=ct[0]||{};err=false}catch(e){err=true}render()}
+const txt=e=>L==="en"?((e.payload&&e.payload.en)||e.explain):e.explain;
+function render(){
+document.querySelectorAll("[data-m]").forEach(b=>b.textContent=t(b.dataset.m));$("#lg").textContent=L==="uk"?"EN":"UA";$("#ht").textContent=t("feed");$("#hn").textContent=events.length;
+$("#stat").textContent=err?t("err"):ctl.tick==null?t("load"):`${t("day")} ${ctl.world_day}, ${t("tick")} ${ctl.tick}, ${cit.size} ${t("cit")}`;
+$("#list").innerHTML=events.map(e=>{const n=cit.get(e.citizen_id),d=new Date(e.ts),r=L==="en"?(RE[e.reason]||e.reason):e.reason;
+return `<div class="ev" data-id="${+e.citizen_id}"><b>${esc(n?n.name:"?")}</b> ${esc(txt(e))}<small>${t("why")}: ${esc(r)}, ${d.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}</small></div>`}).join("")||`<div class="ev">${t("empty")}</div>`;
+card()}
+
+document.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>setMode(b.dataset.m));
+$("#lg").onclick=()=>{L=L==="uk"?"en":"uk";try{localStorage.setItem("aion-l",L)}catch(e){}render()};
+$("#head").onclick=()=>$("#sheet").classList.toggle("open");
+$("#list").onclick=e=>{const el=e.target.closest(".ev");if(el&&el.dataset.id){select(+el.dataset.id);setMode("follow")}};
+
+const el=R.domElement,P=new Map(),RC=new THREE.Raycaster();let moved=0,pd=0;
+const pinch=()=>{const a=[...P.values()];return Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1])};
+el.addEventListener("pointerdown",e=>{el.setPointerCapture(e.pointerId);P.set(e.pointerId,[e.clientX,e.clientY]);moved=0;if(P.size===2)pd=pinch()});
+el.addEventListener("pointermove",e=>{if(!P.has(e.pointerId))return;const o=P.get(e.pointerId);P.set(e.pointerId,[e.clientX,e.clientY]);
+if(P.size===1){const dx=e.clientX-o[0],dy=e.clientY-o[1];moved+=Math.abs(dx)+Math.abs(dy);cam.yaw-=dx*.006;if(mode!=="top")cam.pit=Math.max(.15,Math.min(1.45,cam.pit+dy*.005))}
+else if(P.size===2){const d=pinch();if(pd)cam.dist=Math.max(8,Math.min(130,cam.dist*pd/d));pd=d;moved+=9}});
+el.addEventListener("pointerup",e=>{if(P.size===1&&moved<6){RC.setFromCamera(new THREE.Vector2(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1),C);const h=RC.intersectObjects([...robots.values()].map(r=>r.g),true);if(h.length)select(h[0].object.userData.rid)}P.delete(e.pointerId);pd=0});
+el.addEventListener("pointercancel",e=>{P.delete(e.pointerId);pd=0});
+el.addEventListener("wheel",e=>{cam.dist=Math.max(8,Math.min(130,cam.dist*(1+e.deltaY*.001)));e.preventDefault()},{passive:false});
+addEventListener("resize",()=>{R.setSize(innerWidth,innerHeight);C.aspect=innerWidth/innerHeight;C.updateProjectionMatrix()});
+
+const clk=new THREE.Clock(),still=matchMedia("(prefers-reduced-motion:reduce)").matches;
+(function loop(){requestAnimationFrame(loop);const dt=Math.min(clk.getDelta(),.1),T=clk.elapsedTime;
+robots.forEach(r=>{const dx=r.to.x-r.g.position.x,dz=r.to.z-r.g.position.z,d=Math.hypot(dx,dz);if(d>.05){const s=Math.min(d,dt*4);r.g.position.x+=dx/d*s;r.g.position.z+=dz/d*s;r.g.rotation.y=Math.atan2(dx,dz)}r.g.children[0].position.y=.7+(d>.05?Math.sin(T*10)*.05:0)});
+const sr=robots.get(sel);ring.visible=!!sr;if(sr){ring.position.x=sr.g.position.x;ring.position.z=sr.g.position.z}
+if(mode==="follow"&&sr)cam.goal.copy(sr.g.position);
+if(!still)core.rotation.y=T*.3;
+cam.tgt.lerp(cam.goal,.08);const cp=Math.cos(cam.pit);
+C.position.set(cam.tgt.x+Math.sin(cam.yaw)*cp*cam.dist,cam.tgt.y+Math.sin(cam.pit)*cam.dist,cam.tgt.z+Math.cos(cam.yaw)*cp*cam.dist);C.lookAt(cam.tgt);
+R.render(S,C)})();
+
+render();load();setInterval(load,30000);
+</script></body></html>
