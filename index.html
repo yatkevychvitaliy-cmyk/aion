@@ -160,4 +160,31 @@ $("#list").innerHTML=events.map(e=>{const n=cit.get(e.citizen_id),d=new Date(e.t
 return `<div class="ev" data-id="${+e.citizen_id}"><b>${esc(n?n.name:"?")}</b> ${esc(txt(e))}<small>${t("why")}: ${esc(r)}, ${d.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}</small></div>`}).join("")||`<div class="ev">${t("empty")}</div>`;card()}
 document.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>setMode(b.dataset.m));
 $("#tm").onclick=()=>{tmode=tmode==="auto"?"d":tmode==="d"?"n":"auto";forceH=tmode==="d"?13:tmode==="n"?23:null;applyEnv();render()};
-$("#lg").onclick=()=>{L=L=
+$("#lg").onclick=()=>{L=L==="uk"?"en":"uk";try{localStorage.setItem("aion-l",L)}catch(e){}render()};
+$("#head").onclick=()=>$("#sheet").classList.toggle("open");
+$("#list").onclick=e=>{const x=e.target.closest(".ev");if(x&&x.dataset.id){select(+x.dataset.id);setMode("follow")}};
+
+const cv=R.domElement,P=new Map(),RC=new THREE.Raycaster();let moved=0,pd=0,pm=null;
+const pinch=()=>{const a=[...P.values()];return Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1])},mid=()=>{const a=[...P.values()];return[(a[0][0]+a[1][0])/2,(a[0][1]+a[1][1])/2]};
+cv.addEventListener("pointerdown",e=>{cv.setPointerCapture(e.pointerId);P.set(e.pointerId,[e.clientX,e.clientY]);moved=0;if(P.size===2){pd=pinch();pm=mid()}});
+cv.addEventListener("pointermove",e=>{if(!P.has(e.pointerId))return;const o=P.get(e.pointerId);P.set(e.pointerId,[e.clientX,e.clientY]);
+if(P.size===1){const dx=e.clientX-o[0],dy=e.clientY-o[1];moved+=Math.abs(dx)+Math.abs(dy);cam.yaw-=dx*.006;if(mode!=="top")cam.pit=Math.max(.12,Math.min(1.45,cam.pit+dy*.005))}
+else if(P.size===2){const d=pinch(),m=mid();if(pd)cam.dist=Math.max(6,Math.min(330,cam.dist*pd/d));pd=d;
+if(pm&&mode!=="follow"){const k=cam.dist*.0016,dx=m[0]-pm[0],dy=m[1]-pm[1],sy=Math.sin(cam.yaw),cy=Math.cos(cam.yaw);
+cam.goal.x=Math.max(-150,Math.min(150,cam.goal.x-cy*dx*k+(-sy)*dy*k));cam.goal.z=Math.max(-150,Math.min(150,cam.goal.z+sy*dx*k+(-cy)*dy*k))}pm=m;moved+=9}});
+cv.addEventListener("pointerup",e=>{if(P.size===1&&moved<6){RC.setFromCamera(new THREE.Vector2(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1),C);const h=RC.intersectObjects([...robots.values()].map(r=>r.g),true);if(h.length)select(h[0].object.userData.rid)}P.delete(e.pointerId);pd=0;pm=null});
+cv.addEventListener("pointercancel",e=>{P.delete(e.pointerId);pd=0;pm=null});
+cv.addEventListener("wheel",e=>{cam.dist=Math.max(6,Math.min(330,cam.dist*(1+e.deltaY*.001)));e.preventDefault()},{passive:false});
+addEventListener("resize",()=>{R.setSize(innerWidth,innerHeight);C.aspect=innerWidth/innerHeight;C.updateProjectionMatrix()});
+
+const clk=new THREE.Clock(),still=matchMedia("(prefers-reduced-motion:reduce)").matches;
+(function loop(){requestAnimationFrame(loop);const dt=Math.min(clk.getDelta(),.1),T=clk.elapsedTime;
+robots.forEach(r=>{const dx=r.to.x-r.g.position.x,dz=r.to.z-r.g.position.z,d=Math.hypot(dx,dz);if(d>.05){const s=Math.min(d,dt*6);r.g.position.x+=dx/d*s;r.g.position.z+=dz/d*s;r.g.rotation.y=Math.atan2(dx,dz)}r.g.children[0].position.y=1.15+(d>.05?Math.sin(T*10)*.05:0)});
+const sr=robots.get(sel);if(mode==="follow"&&sr)cam.goal.copy(sr.g.position);
+if(!still){if(halo){halo.rotation.x=T*.8;halo.rotation.y=T*.5}if(bust)bust.rotation.y=T*.25}
+water.material.emissiveIntensity=.8+Math.sin(T)*.2;
+cam.tgt.lerp(cam.goal,.1);const cp=Math.cos(cam.pit);
+C.position.set(cam.tgt.x+Math.sin(cam.yaw)*cp*cam.dist,cam.tgt.y+Math.sin(cam.pit)*cam.dist,cam.tgt.z+Math.cos(cam.yaw)*cp*cam.dist);C.lookAt(cam.tgt);
+R.render(S,C)})();
+applyEnv();setInterval(applyEnv,20000);render();load();setInterval(load,30000);
+</script></body></html>
