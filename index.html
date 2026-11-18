@@ -30,6 +30,7 @@ button.on{border-color:var(--cy);color:var(--cy)}
 <button data-m="free" class="on"></button><button data-m="top"></button><button data-m="follow"></button><button id="tm"></button><button id="lg"></button>
 <span id="stat"></span></div>
 <div id="sheet"><div id="card"></div><div id="head"><span id="ht"></span><span id="hn"></span></div><div id="list"></div></div>
+<script>var dbg=document.createElement("div");dbg.style.cssText="position:fixed;top:90px;left:8px;right:8px;z-index:99;background:#102;color:#9ff;padding:6px;font:12px monospace";dbg.textContent="boot v3";document.body.appendChild(dbg);window.onerror=function(m,s,l,c){dbg.textContent="ERR: "+m+" @"+l+":"+c};</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 window.onerror=(m,s,l)=>{document.getElementById("stat").textContent="ERR: "+m+" (рядок "+l+")"};
