@@ -1,0 +1,11 @@
+<!DOCTYPE html><html lang="uk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>AION Київ</title>
+<style>html,body{margin:0;height:100%;background:#060912;color:#e4ecff;font:15px system-ui,sans-serif;overflow:hidden}canvas{display:block;touch-action:none}
+#bar{position:fixed;top:0;left:0;right:0;padding:calc(8px + env(safe-area-inset-top)) 10px 8px;display:flex;gap:8px;align-items:center;pointer-events:none}
+#bar>*{pointer-events:auto}#brand{font-weight:700;letter-spacing:.14em;color:#35e6ff;margin-right:auto;text-shadow:0 0 14px #35e6ff}
+button{font:inherit;color:inherit;background:rgba(10,18,36,.88);border:1px solid #1d2d52;border-radius:8px;padding:7px 11px}
+#msg{position:fixed;left:0;right:0;top:45%;text-align:center;color:#8fa0c4;padding:0 16px}
+#at{position:fixed;left:8px;bottom:calc(6px + env(safe-area-inset-bottom));font-size:11px;color:#8fa0c4}</style></head><body>
+<div id="bar"><span id="brand">AION Київ</span><button id="tm">Час: авто</button></div>
+<div id="msg">Завантажую карту…</div><div id="at">© OpenStreetMap contributors</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="kyiv.js?v=1"></script></body></html>
