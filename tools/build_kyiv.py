@@ -6,7 +6,10 @@ KY = math.pi / 180 * 6371000.0
 KX = KY * math.cos(math.radians(LAT0))
 HALF = 1500  # метрів від центру
 OVERPASS = ["https://overpass-api.de/api/interpreter",
+            "https://overpass.private.coffee/api/interpreter",
             "https://overpass.kumi.systems/api/interpreter"]
+HEAD = {"User-Agent": "AION-city-builder/1.0 (+https://github.com/yatkevychvitaliy-cmyk/aion)",
+        "Accept": "*/*"}
 ROAD = {"motorway": 14, "trunk": 14, "primary": 12, "secondary": 10,
         "tertiary": 8, "residential": 6, "unclassified": 6,
         "living_street": 5, "service": 4, "pedestrian": 4,
@@ -14,15 +17,16 @@ ROAD = {"motorway": 14, "trunk": 14, "primary": 12, "secondary": 10,
 
 
 def run(query):
-    for url in OVERPASS * 2:
+    for attempt in range(8):
+        url = OVERPASS[attempt % len(OVERPASS)]
         try:
-            r = requests.post(url, data={"data": query}, timeout=200)
+            r = requests.post(url, data={"data": query}, headers=HEAD, timeout=240)
             if r.status_code == 200:
                 return r.json()
-            print("overpass", url, r.status_code)
+            print("overpass", url, r.status_code, r.text[:120].replace("\n", " "))
         except Exception as e:
             print("помилка", e)
-        time.sleep(15)
+        time.sleep(20 * (attempt + 1))
     sys.exit("Overpass недоступний")
 
 
@@ -86,16 +90,23 @@ def stitch(segs):
 def main():
     dlat, dlon = HALF / KY, HALF / KX
     bb = f"({LAT0 - dlat},{LON0 - dlon},{LAT0 + dlat},{LON0 + dlon})"
-    q = ("[out:json][timeout:180];(" +
-         f'way["building"]{bb};way["highway"]{bb};' +
-         f'way["natural"="water"]{bb};way["waterway"="riverbank"]{bb};' +
-         f'way["leisure"~"^(park|garden)$"]{bb};' +
-         f'way["landuse"~"^(forest|grass|recreation_ground)$"]{bb};' +
-         f'relation["natural"="water"]{bb};relation["waterway"="riverbank"]{bb};' +
-         ");out geom;")
-    data = run(q)
+    parts = [
+        f'way["building"]{bb};',
+        f'way["highway"]{bb};',
+        f'way["natural"="water"]{bb};way["waterway"="riverbank"]{bb};'
+        f'relation["natural"="water"]{bb};relation["waterway"="riverbank"]{bb};',
+        f'way["leisure"~"^(park|garden)$"]{bb};'
+        f'way["landuse"~"^(forest|grass|recreation_ground)$"]{bb};',
+    ]
+    elements = []
+    for p in parts:
+        data = run("[out:json][timeout:180];(" + p + ");out geom;")
+        got = data.get("elements", [])
+        print("отримано", len(got))
+        elements += got
+        time.sleep(8)
     out = {"origin": [LAT0, LON0], "half": HALF, "b": [], "r": [], "w": [], "p": []}
-    for i, el in enumerate(data.get("elements", [])):
+    for i, el in enumerate(elements):
         tags = el.get("tags", {})
         if el["type"] == "way" and "geometry" in el:
             pts = [(g["lat"], g["lon"]) for g in el["geometry"]]
