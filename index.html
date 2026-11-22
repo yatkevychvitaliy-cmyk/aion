@@ -154,10 +154,15 @@ else if(k==="I"){const en=(ii++===3);if(en){for(const dx of[-7,7]){FP.push([cx+d
 else{tower(cx-6,cz+4,12,16,10,"ind");tower(cx+8,cz-6,10,10,7,"ind");FP.push([cx+8,cz+8,2,2]);cyl(cx+8,11,cz+8,1.2,1.5,22,stone,8);glow(0xff7a45,8,cx+8,23,cz+8,1)}}
 else if(k==="C"){FP.push([cx,cz,12,12]);const ring=new THREE.Mesh(new THREE.TorusGeometry(11,.35,8,48),neonA);ring.rotation.x=Math.PI/2;ring.position.set(cx,.3,cz);S.add(ring);
 const pdl=new THREE.Mesh(new THREE.BoxGeometry(7,3.5,7),stone);pdl.position.set(cx,1.75,cz);S.add(pdl);
-cyl(cx,5.6,cz,3.2,4,2.8,amb,8);bust=new THREE.Group();const hd=new THREE.Mesh(new THREE.IcosahedronGeometry(2.3,1),amb);hd.scale.set(.9,1.15,.95);hd.position.y=3.9;bust.add(hd);const vz=new THREE.Mesh(new THREE.BoxGeometry(2.2,.35,.3),neonW);vz.position.set(0,4.1,2);bust.add(vz);bust.position.set(cx,7,cz);S.add(bust);
-halo=new THREE.Mesh(new THREE.TorusGeometry(3.6,.12,8,40),neonA);halo.position.set(cx,15.6,cz);S.add(halo);
-const bm=new THREE.Mesh(new THREE.CylinderGeometry(.6,2.6,70,16,1,true),new THREE.MeshBasicMaterial({color:0xE8B475,transparent:true,opacity:.12,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));bm.position.set(cx,40,cz);S.add(bm);
-glow(0xE8B475,22,cx,12,cz,1);sign("ТВОРЕЦЬ",cx,21,cz,"#E8B475",1.2)}}
+const st2=new THREE.Mesh(new THREE.BoxGeometry(5,.9,5),stone),nk=new THREE.Mesh(new THREE.BoxGeometry(2.2,1.3,2.2),stone);st2.position.set(cx,3.95,cz);nk.position.set(cx,5.05,cz);S.add(st2,nk);
+bust=new THREE.Group();bust.position.set(cx,10.9,cz);S.add(bust);
+const fr=new THREE.Mesh(new THREE.BoxGeometry(1,1,.5),mtl),phm=new THREE.MeshBasicMaterial({color:0x2A3F5E}),ph=new THREE.Mesh(new THREE.PlaneGeometry(1,1),phm);ph.position.z=.3;bust.add(fr,ph);
+const setSz=(wd,ht)=>{ph.scale.set(wd,ht,1);fr.scale.set(wd+.9,ht+.9,1);bust.position.y=5.45+(ht+.9)/2;if(halo)halo.position.y=5.45+ht+.9+2.2};setSz(7.4,10);
+new THREE.TextureLoader().load("creator_portrait.jpg?t="+Date.now(),t=>{t.encoding=THREE.sRGBEncoding;phm.map=t;phm.color.set(0xffffff);phm.needsUpdate=true;{const as=t.image.width/t.image.height;as>=.9?setSz(9,9/as):setSz(10*as,10)}},undefined,()=>{});
+const hrM=new THREE.MeshBasicMaterial({color:0xff2a2a}),hrM2=new THREE.MeshBasicMaterial({color:0xff7a7a});halo=new THREE.Group();halo.position.set(cx,18.2,cz);S.add(halo);const hr=new THREE.Mesh(new THREE.TorusGeometry(3.6,.14,8,48),hrM);hr.rotation.x=Math.PI/2;halo.add(hr);
+for(let q=0;q<8;q++){const a=q/8*6.2832,b=new THREE.Mesh(new THREE.SphereGeometry(q%2?.32:.5,8,6),q%2?hrM2:hrM);b.position.set(Math.cos(a)*3.6,0,Math.sin(a)*3.6);halo.add(b)}
+const bm=new THREE.Mesh(new THREE.CylinderGeometry(3.2,.9,120,16,1,true),new THREE.MeshBasicMaterial({color:0xff2a2a,transparent:true,opacity:.16,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));bm.position.set(cx,79.5,cz);S.add(bm);
+glow(0xE8B475,22,cx,11,cz,1);sign("ТВОРЕЦЬ",cx,22.5,cz,"#E8B475",1.2)}}
 flushCity();
 const water=new THREE.Mesh(new THREE.PlaneGeometry(700,56),new THREE.MeshStandardMaterial({color:new THREE.Color(0x254E6D).convertSRGBToLinear(),metalness:.85,roughness:.18,emissive:0x14405A}));water.rotation.x=-Math.PI/2;water.position.set(0,.04,120);S.add(water);
 const lake=new THREE.Mesh(new THREE.CircleGeometry(15,40),new THREE.MeshStandardMaterial({color:0x0a3a5a,metalness:.85,roughness:.15,emissive:0x07406a}));lake.rotation.x=-Math.PI/2;lake.position.set(-90,.09,-90);S.add(lake);
@@ -198,6 +203,8 @@ const free=(x,z)=>{if(z>88||Math.hypot(x+90,z+90)<22)return false;for(const f of
 const LP=[];for(let j=0;j<N;j++)for(let i=0;i<N;i++){if(MAP[j][i]==="W"||(LOW&&(i+j)%2))continue;const cx=bc(i),cz=bc(j);for(const sd of[[1,0],[-1,0],[0,1],[0,-1]])for(const t of[0,8,-8]){const x=cx+(sd[0]?sd[0]*13.6:t),z=cz+(sd[1]?sd[1]*13.6:t);if(free(x,z)){LP.push([x,z]);break}}}
 const lm1=new THREE.InstancedMesh(lit,new THREE.MeshStandardMaterial({vertexColors:true,metalness:.5,roughness:.5}),LP.length),lm2=new THREE.InstancedMesh(glass,new THREE.MeshBasicMaterial({vertexColors:true}),LP.length),lo=new THREE.Object3D();
 LP.forEach((p,q)=>{lo.position.set(p[0],0,p[1]);lo.updateMatrix();lm1.setMatrixAt(q,lo.matrix);lm2.setMatrixAt(q,lo.matrix)});lm1.frustumCulled=lm2.frustumCulled=false;S.add(lm1,lm2)}
+const moonTex=(()=>{const c=document.createElement("canvas");c.width=256;c.height=256;const x=c.getContext("2d"),g=x.createRadialGradient(110,100,10,128,128,128);g.addColorStop(0,"#ff6a4a");g.addColorStop(.7,"#d63a2f");g.addColorStop(1,"#9a1f22");x.fillStyle=g;x.fillRect(0,0,256,256);for(let i=0;i<22;i++){x.fillStyle="rgba(90,10,14,"+(.12+Math.random()*.2)+")";x.beginPath();x.arc(30+Math.random()*196,30+Math.random()*196,6+Math.random()*20,0,6.283);x.fill()}return new THREE.CanvasTexture(c)})();
+const moon=new THREE.Mesh(new THREE.SphereGeometry(26,24,16),new THREE.MeshBasicMaterial({map:moonTex,fog:false,transparent:true})),moonH=new THREE.Sprite(new THREE.SpriteMaterial({map:GT,color:0xff3326,blending:THREE.AdditiveBlending,transparent:true,depthWrite:false,fog:false})),moonG=new THREE.Group(),MOFF=new THREE.Vector3(-250,210,-520);moonH.scale.set(190,190,1);moonG.add(moon,moonH);S.add(moonG);
 const forestPt=()=>{const x=-340+Math.random()*680,z=-340+Math.random()*425;return(Math.abs(x)<150&&z>-150)||Math.hypot(x,z)>335?null:[x,z]};
 scatter(conif(0x1F6B55,0x2C8F6E,1,1),LOW?450:1300,forestPt,[.9,.9]);scatter(conif(0x174F46,0x1F6B55,1.25,.8),LOW?300:900,forestPt,[.9,.8]);
 function crown(c1,c2){const t=new THREE.Color(0x5a3d28),A=new THREE.Color(c1),B=new THREE.Color(c2);return mrg([[new THREE.CylinderGeometry(.35,.45,3.2,6),0,1.6,0,t],[new THREE.IcosahedronGeometry(2.3,1),0,5.2,0,A],[new THREE.IcosahedronGeometry(1.7,1),1.5,4.4,.5,B],[new THREE.IcosahedronGeometry(1.6,1),-1.4,4.6,-.5,B]])}
@@ -221,7 +228,7 @@ const aurM=new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(ac),transpar
 const SH=[0,1,2].map(i=>{const g=new THREE.Group(),m=new THREE.MeshStandardMaterial({color:0x2a3558,metalness:.5,roughness:.5});const h=new THREE.Mesh(new THREE.BoxGeometry(24,3,6.5),m),c=new THREE.Mesh(new THREE.BoxGeometry(5,5,5),neonW);h.position.y=1.5;c.position.set(8,5.5,0);g.add(h,c);for(let q=0;q<4;q++){const k=new THREE.Mesh(new THREE.BoxGeometry(4,2.4,5),new THREE.MeshStandardMaterial({color:[0xff4d6d,0x35e6ff,0xE8B475,0xb46bff][q]}));k.position.set(-9+q*4.2,4.2,0);g.add(k)}S.add(g);return{g,x:-150+i*100,z:[124,134,142][i],v:5+i*1.5}});
 const GVm=GVp.length/4,gvI=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1,0),new THREE.MeshStandardMaterial({color:0x3fbf6a,emissive:0x0f4a22,emissiveIntensity:.4,flatShading:true}),GVm);
 for(let i=0;i<GVm;i++){dm.position.set(GVp[i*4],GVp[i*4+1],GVp[i*4+2]);dm.scale.set(GVp[i*4+3],GVp[i*4+3]*.7,GVp[i*4+3]);dm.updateMatrix();gvI.setMatrixAt(i,dm.matrix)}dm.scale.setScalar(1);if(GVm>0)S.add(gvI);
-function g5(dt,T){const n=lampM.opacity;skyD.position.copy(C.position);wfTex.offset.y-=dt*1.2;CR.forEach((c,i)=>{c.rotation.y=Math.sin(T*.35+i*1.7)*.7});
+function g5(dt,T){const n=lampM.opacity;moonG.position.copy(C.position).add(MOFF);moonG.visible=n>.05;moon.material.opacity=n;moonH.material.opacity=n*.8;skyD.position.copy(C.position);wfTex.offset.y-=dt*1.2;CR.forEach((c,i)=>{c.rotation.y=Math.sin(T*.35+i*1.7)*.7});
 SH.forEach(o=>{o.x+=o.v*dt;if(o.x>190)o.x=-190;o.g.position.set(o.x,Math.sin(T+o.z)*.15,o.z)});
 for(let i=0;i<NJ;i++){const j=jr[i],t=(T*.8+j[2])%1,r=7*t*j[1];jp[i*3]=-90+Math.cos(j[0])*r;jp[i*3+1]=3.5+13*4*t*(1-t)*j[1];jp[i*3+2]=-90+Math.sin(j[0])*r}jg.attributes.position.needsUpdate=true;
 jm.color.setHSL(.62+.12*Math.sin(T*.6),.9,.65);fg.material.color.copy(jm.color);
@@ -327,7 +334,7 @@ let _ae=.016,_fc=0;const clk=new THREE.Clock(),still=matchMedia("(prefers-reduce
 _ae+=(dt-_ae)*.05;if(++_fc%90===0&&_ae>.036&&PR>.75){PR=Math.max(.75,PR-.15);R.setPixelRatio(PR);R.setSize(innerWidth,innerHeight)}
 robots.forEach(r=>{const dx=r.to.x-r.g.position.x,dz=r.to.z-r.g.position.z,d=Math.hypot(dx,dz);if(d>.05){const s=Math.min(d,dt*6);r.g.position.x+=dx/d*s;r.g.position.z+=dz/d*s;r.g.rotation.y=Math.atan2(dx,dz)}r.g.children[0].position.y=d>.05?Math.sin(T*10)*.05:0});
 const sr=robots.get(sel);if(mode==="follow"&&sr)cam.goal.copy(sr.g.position);
-if(!still){if(halo){halo.rotation.x=T*.8;halo.rotation.y=T*.5}if(bust)bust.rotation.y=T*.25}
+if(!still){if(halo)halo.rotation.y=T*.9;if(bust)bust.rotation.y=Math.atan2(C.position.x-bust.position.x,C.position.z-bust.position.z)}
 water.material.emissiveIntensity=.8+Math.sin(T)*.2;fx(dt,T);
 cam.tgt.lerp(cam.goal,.1);const cp=Math.cos(cam.pit);
 C.position.set(cam.tgt.x+Math.sin(cam.yaw)*cp*cam.dist,cam.tgt.y+Math.sin(cam.pit)*cam.dist,cam.tgt.z+Math.cos(cam.yaw)*cp*cam.dist);C.lookAt(cam.tgt);
