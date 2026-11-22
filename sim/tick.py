@@ -8,6 +8,7 @@ import os
 import random
 import re
 import sys
+import time
 from datetime import datetime, timezone
 
 import requests
@@ -141,6 +142,26 @@ def parse_json(text):
     return None
 
 
+def salvage_agents(text):
+    """Якщо відповідь обрізана — дістає з неї всі повністю отримані об'єкти агентів."""
+    i = text.find('"agents"')
+    j = text.find("[", i) if i >= 0 else -1
+    if j < 0:
+        return None
+    dec, pos, out = json.JSONDecoder(), j + 1, []
+    while True:
+        m = re.compile(r"\s*,?\s*").match(text, pos)
+        pos = m.end()
+        if pos >= len(text) or text[pos] != "{":
+            break
+        try:
+            obj, pos = dec.raw_decode(text, pos)
+        except ValueError:
+            break
+        out.append(obj)
+    return {"agents": out, "verdicts": []} if out else None
+
+
 def budget_row(day):
     rows = get("budget", {"day": f"eq.{day}", "provider": "eq.gemini"})
     if rows:
@@ -164,32 +185,50 @@ def call_gemini(system, prompt):
             "systemInstruction": {"parts": [{"text": system}]},
             "contents": [{"role": "user", "parts": [{"text": prompt}]}],
             "generationConfig": {"temperature": 0.9, "responseMimeType": "application/json",
-                                 "maxOutputTokens": 16000},
+                                 "maxOutputTokens": 24000},
         }
-        try:
-            r = requests.post(
-                f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
-                headers={"x-goog-api-key": GEMINI_KEY, "Content-Type": "application/json"},
-                json=body, timeout=120)
-        except requests.RequestException as e:
-            print(f"{model}: мережева помилка {type(e).__name__}")
+        r = None
+        for attempt in range(2):
+            try:
+                r = requests.post(
+                    f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
+                    headers={"x-goog-api-key": GEMINI_KEY, "Content-Type": "application/json"},
+                    json=body, timeout=90)
+            except requests.RequestException as e:
+                print(f"{model}: мережева помилка {type(e).__name__}")
+                r = None
+                break
+            b["calls"] += 1
+            patch("budget", {"day": f"eq.{day}", "provider": "eq.gemini"}, {"calls": b["calls"]})
+            if r.status_code in (429, 500, 503) and attempt == 0 and b["calls"] < b["call_limit"]:
+                print(f"{model}: HTTP {r.status_code}, повтор через 8 с")
+                time.sleep(8)
+                continue
+            break
+        if r is None:
             continue
-        b["calls"] += 1
-        patch("budget", {"day": f"eq.{day}", "provider": "eq.gemini"}, {"calls": b["calls"]})
         if not r.ok:
             print(f"{model}: HTTP {r.status_code} {r.text[:200]}")
             continue
         try:
-            parts = r.json()["candidates"][0]["content"]["parts"]
+            cand = r.json()["candidates"][0]
+            parts = cand["content"]["parts"]
             text = "".join(p.get("text", "") for p in parts if not p.get("thought"))
+            finish = cand.get("finishReason")
         except (KeyError, IndexError, ValueError):
-            print(f"{model}: порожня відповідь")
+            print(f"{model}: порожня відповідь {r.text[:200]}")
             continue
         data = parse_json(text)
+        if not isinstance(data, dict):
+            data = salvage_agents(text)
+            if data:
+                print(f"{model}: відповідь обрізана ({finish}), взято {len(data['agents'])} агентів")
         if isinstance(data, dict):
             print(f"Gemini ({model}): ok, виклик {b['calls']}/{b['call_limit']}")
             return data
-        print(f"{model}: не вдалося розібрати JSON")
+        print(f"{model}: не вдалося розібрати JSON (finish={finish}, довжина={len(text)})")
+        print("  початок:", text[:200].replace("\n", " "))
+        print("  кінець:", text[-200:].replace("\n", " "))
     return None
 
 
