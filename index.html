@@ -156,13 +156,13 @@ else if(k==="C"){FP.push([cx,cz,12,12]);const ring=new THREE.Mesh(new THREE.Toru
 const pdl=new THREE.Mesh(new THREE.BoxGeometry(7,3.5,7),stone);pdl.position.set(cx,1.75,cz);S.add(pdl);
 const st2=new THREE.Mesh(new THREE.BoxGeometry(5,.9,5),stone),nk=new THREE.Mesh(new THREE.BoxGeometry(2.2,1.3,2.2),stone);st2.position.set(cx,3.95,cz);nk.position.set(cx,5.05,cz);S.add(st2,nk);
 bust=new THREE.Group();bust.position.set(cx,10.9,cz);S.add(bust);
-const fr=new THREE.Mesh(new THREE.BoxGeometry(1,1,.5),mtl),phm=new THREE.MeshBasicMaterial({color:0x2A3F5E}),ph=new THREE.Mesh(new THREE.PlaneGeometry(1,1),phm);ph.position.z=.3;bust.add(fr,ph);
+const fr=new THREE.Mesh(new THREE.BoxGeometry(1,1,.5),mtl),phm=new THREE.MeshBasicMaterial({color:0x2A3F5E}),ph=new THREE.Mesh(new THREE.PlaneGeometry(1,1),phm);ph.position.z=.3;bust.add(fr,ph);const bl=new THREE.Mesh(new THREE.PlaneGeometry(26,26),new THREE.MeshBasicMaterial({map:GT,color:0xff3a2a,transparent:true,opacity:.7,blending:THREE.AdditiveBlending,depthWrite:false}));bl.position.z=-.6;bust.add(bl);
 const setSz=(wd,ht)=>{ph.scale.set(wd,ht,1);fr.scale.set(wd+.9,ht+.9,1);bust.position.y=5.45+(ht+.9)/2;if(halo)halo.position.y=5.45+ht+.9+2.2};setSz(7.4,10);
 new THREE.TextureLoader().load("creator_portrait.jpg?t="+Date.now(),t=>{t.encoding=THREE.sRGBEncoding;phm.map=t;phm.color.set(0xffffff);phm.needsUpdate=true;{const as=t.image.width/t.image.height;as>=.9?setSz(9,9/as):setSz(10*as,10)}},undefined,()=>{});
 const hrM=new THREE.MeshBasicMaterial({color:0xff2a2a}),hrM2=new THREE.MeshBasicMaterial({color:0xff7a7a});halo=new THREE.Group();halo.position.set(cx,18.2,cz);S.add(halo);const hr=new THREE.Mesh(new THREE.TorusGeometry(3.6,.14,8,48),hrM);hr.rotation.x=Math.PI/2;halo.add(hr);
 for(let q=0;q<8;q++){const a=q/8*6.2832,b=new THREE.Mesh(new THREE.SphereGeometry(q%2?.32:.5,8,6),q%2?hrM2:hrM);b.position.set(Math.cos(a)*3.6,0,Math.sin(a)*3.6);halo.add(b)}
 const bm=new THREE.Mesh(new THREE.CylinderGeometry(3.2,.9,120,16,1,true),new THREE.MeshBasicMaterial({color:0xff2a2a,transparent:true,opacity:.16,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));bm.position.set(cx,79.5,cz);S.add(bm);
-glow(0xE8B475,22,cx,11,cz,1);sign("ТВОРЕЦЬ",cx,22.5,cz,"#E8B475",1.2)}}
+sign("ТВОРЕЦЬ",cx,22.5,cz,"#E8B475",1.2)}}
 flushCity();
 const water=new THREE.Mesh(new THREE.PlaneGeometry(700,56),new THREE.MeshStandardMaterial({color:new THREE.Color(0x254E6D).convertSRGBToLinear(),metalness:.85,roughness:.18,emissive:0x14405A}));water.rotation.x=-Math.PI/2;water.position.set(0,.04,120);S.add(water);
 const lake=new THREE.Mesh(new THREE.CircleGeometry(15,40),new THREE.MeshStandardMaterial({color:0x0a3a5a,metalness:.85,roughness:.15,emissive:0x07406a}));lake.rotation.x=-Math.PI/2;lake.position.set(-90,.09,-90);S.add(lake);
