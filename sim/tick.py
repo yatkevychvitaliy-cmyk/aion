@@ -137,6 +137,10 @@ def _variants(t):
     t2 = re.sub(r'\\(?!["\\/bfnrtu])', "", t)
     t2 = re.sub(r",\s*([}\]])", r"\1", t2)
     yield t2
+    # назви полів без лапок: {importance: 2} -> {"importance": 2}
+    t3 = re.sub(r'([{,]\s*)([A-Za-z_][A-Za-z0-9_]*)\s*:', r'\1"\2":', t2)
+    t3 = re.sub(r'([{,]\s*)([A-Za-z_][A-Za-z0-9_]*)"\s*:', r'\1"\2":', t3)
+    yield t3
 
 
 def parse_json(text):
@@ -209,7 +213,7 @@ def call_gemini(system, prompt):
                 r = requests.post(
                     f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
                     headers={"x-goog-api-key": GEMINI_KEY, "Content-Type": "application/json"},
-                    json=body, timeout=90)
+                    json=body, timeout=70)
             except requests.RequestException as e:
                 print(f"{model}: мережева помилка {type(e).__name__}")
                 r = None
